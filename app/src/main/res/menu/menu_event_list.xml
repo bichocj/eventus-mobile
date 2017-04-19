@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:mymenu="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/reload"
+        android:icon="@drawable/ic_cached_white_24dp"
+        mymenu:showAsAction="always"
+        android:title="@string/reload"/>
+    <item
+        android:id="@+id/back"
+        android:icon="@drawable/ic_arrow_back_white_18dp"
+        mymenu:showAsAction="always"
+        android:title="@string/back"/>
+
+
+</menu>

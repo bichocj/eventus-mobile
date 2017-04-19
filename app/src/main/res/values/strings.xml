@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">QR-Control Emesh</string>
+    <string name="create_new"> Create </string>
+    <string name="open">Open </string>
+    <string name="back">Back </string>
+    <string name="scan">SCAN</string>
+    <string name="flash">FLASH</string>
+    <string name="reload">ACTUALIZAR</string>
+    <string name="dialog_exit">¿Desea salir de la apliación?</string>
+    <string name="dialog_sync_local">¿Desea descargar información a la apliación?</string>
+    <string name="dialog_sync_web">¿Desea subir la información de la apliación?</string>
+    <string name="yes">YES</string>
+    <string name="cancel">CANCEL</string>
+    <string name="continue_nav">CONTINUE</string>
+</resources>
