@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.apache.http.HttpResponse;
@@ -39,6 +40,7 @@ import Objects.LogInResponse;
 import Objects.User;
 import dbapp.SqlliteConsulter;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
+import settings.Global_Variables;
 
 ////del ejm de post
 //import butterknife.ButterKnife;
@@ -51,16 +53,23 @@ public class MainActivity extends AppCompatActivity{
     private EditText inputEmail;
     private EditText inputPass;
     private ProgressDialog ringProgressDialog;
+    private String static_url;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d("CREATE Login","Login");
+        if (Global_Variables.DEV){
+            static_url=Global_Variables.DEV_STATIC_URL;
+        }
+        else{
+            static_url=Global_Variables.PROD_STATIC_URL;
+        }
 
         SqlliteConsulter MDB= new SqlliteConsulter(MainActivity.this.getApplicationContext());
         User user_logged=MDB.isLoggedUser();
         if(user_logged!=null){
             this.finish();
-            Intent intent= new Intent(MainActivity.this,SyncronizationActivity.class);
+            Intent intent= new Intent(MainActivity.this,SyncActivity.class);
             startActivity(intent);
         }
         setContentView(R.layout.activity_login);
@@ -93,6 +102,11 @@ public class MainActivity extends AppCompatActivity{
 
     }
 
+    public void forgotPassword(View view){
+        Intent intent = new Intent(MainActivity.this, FogotPasswordActivity.class);
+        startActivity(intent);
+
+    }
     public void onSignupFailed() {
         Toast.makeText(MainActivity.this, "Login failed", Toast.LENGTH_LONG).show();
         //_signupButton.setEnabled(true);
@@ -179,44 +193,7 @@ public class MainActivity extends AppCompatActivity{
         }
         return true;
     }
-    private void makePostRequest() {
 
-        Toast.makeText(MainActivity.this,"Comenzando post",Toast.LENGTH_SHORT).show();
-
-        HttpClient httpClient = new DefaultHttpClient();
-        // replace with your url
-        HttpPost httpPost = new HttpPost("http://192.168.0.119:8000/services/auth/login/");
-
-
-        //Post Data
-
-        List<NameValuePair> nameValuePair = new ArrayList<NameValuePair>(2);
-        nameValuePair.add(new BasicNameValuePair("username", "admin"));
-        nameValuePair.add(new BasicNameValuePair("password", "passto1234"));
-
-
-        //Encoding POST data
-        try {
-            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePair));
-        } catch (UnsupportedEncodingException e) {
-            // log exception
-            e.printStackTrace();
-        }
-
-        //making POST request.
-        try {
-            HttpResponse response = httpClient.execute(httpPost);
-            // write response to log
-            Log.d("Http Post Response:", response.toString());
-        } catch (ClientProtocolException e) {
-            // Log exception
-            e.printStackTrace();
-        } catch (IOException e) {
-            // Log exception
-            e.printStackTrace();
-        }
-
-    }
     private class HttpRequestTask extends AsyncTask<Void, Void, LogInResponse> {
         private String inputEmail;
         private String inputPass;
@@ -243,7 +220,7 @@ public class MainActivity extends AppCompatActivity{
                     }
                 });
 
-                final String url = "http://eventus.la//services//auth//login//";
+                final String url = static_url+"services/auth/login/";
 
                 RestTemplate restTemplate = new RestTemplate();
                 // Add the Jackson and String message converters
@@ -279,7 +256,7 @@ public class MainActivity extends AppCompatActivity{
                 Toast.makeText(MainActivity.this, "Se logeo. . .", Toast.LENGTH_SHORT).show();
                 SqlliteConsulter MDB= new SqlliteConsulter(MainActivity.this.getApplicationContext());
                 MDB.insertUser(new User("",inputEmail,inputPass,"true","false","false",greeting.getToken()));
-                Intent intent = new Intent(MainActivity.this, SyncronizationActivity.class);
+                Intent intent = new Intent(MainActivity.this, SyncActivity.class);
                 intent.putExtra("token",greeting.getToken());
                 startActivity(intent);
                 MainActivity.this.finish();

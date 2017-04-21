@@ -60,17 +60,26 @@
         android:text="Sincroniza los datos necesarios para poder
 hacer uso aplicación de toma de asistencia de
 eMesh.  "/>
-    <ImageView
-        android:id="@+id/img_sync_activity"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/use_of_app"/>
+    <Button
+        android:id="@+id/btnSync"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:onClick="syncbtnClick"
+        android:background="#2196f3"
+        android:text="SINCRONIZAR"
+        android:layout_marginTop="25px"
+        android:textColor="#ffffff"
+        android:layout_below="@+id/use_of_app"
+        android:layout_toRightOf="@+id/img_download"
+        android:layout_gravity="center_horizontal"
+        android:paddingLeft="15dip"
+        android:paddingRight="15dip" />
     <TextView
         android:id="@+id/resume_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="15dp"
-        android:layout_below="@+id/img_sync_activity"
+        android:layout_below="@+id/btnSync"
         android:layout_marginTop="25px"
         android:layout_toRightOf="@+id/img_download"
         android:text="Serán descargados aproximadamente 10 MB.

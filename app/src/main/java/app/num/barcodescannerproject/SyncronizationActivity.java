@@ -47,6 +47,7 @@ import cz.msebera.android.httpclient.client.methods.HttpGet;
 import cz.msebera.android.httpclient.client.methods.HttpPost;
 import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
 import dbapp.SqlliteConsulter;
+import settings.Global_Variables;
 
 /**
  * Created by Administrador on 30/07/2016.
@@ -54,36 +55,21 @@ import dbapp.SqlliteConsulter;
 public class SyncronizationActivity extends AppCompatActivity {
     private String token;
     private User user;
+    private String static_url;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Global_Variables.DEV){
+            static_url=Global_Variables.DEV_STATIC_URL;
+        }
+        else{
+            static_url=Global_Variables.PROD_STATIC_URL;
+        }
         Bundle extras= getIntent().getExtras();
         if(extras != null){
             token=extras.getString("token");
         }
-        SqlliteConsulter MDB= new SqlliteConsulter(SyncronizationActivity.this.getApplicationContext());
-        user=MDB.isLoggedUser();
-        if(user!=null)
-        {
-            this.token=user.getToken();
-        }
-
-
-
         setContentView(R.layout.v_sync);
-        if(user.getSync_local().equals("true")) {
-            Button button_syclbd = (Button) findViewById(R.id.syndb_btn);
-            button_syclbd.setVisibility(View.GONE);
-
-        }
-        if(user.getSync_web().equals("true")){
-            Button button_syclw= (Button) findViewById(R.id.syncwb_btn);
-            button_syclw.setVisibility(View.GONE);
-        }
-        if(user.getSync_local().equals("true") && user.getSync_web().equals("true")){
-            Intent intent = new Intent(SyncronizationActivity.this, ListEventActivity.class);
-            startActivity(intent);
-        }
     }
     void mxSyncLocal(View view)
     {
@@ -215,7 +201,7 @@ public class SyncronizationActivity extends AppCompatActivity {
                 else {
                     for (AttendanceClass attendace : attendances) {
                         try {
-                            final String url = "http://eventus.la//services//cigunsa//activities//" + attendace.getActivity() + "//registers//" + attendace.getRegister() + "//attendances//";
+                            final String url = static_url+"services/cigunsa/activities/" + attendace.getActivity() + "/registers/" + attendace.getRegister() + "/attendances/";
                             //Create an HTTP client
                             HttpClient client = new DefaultHttpClient();
                             HttpPost post = new HttpPost(url);
@@ -262,7 +248,7 @@ public class SyncronizationActivity extends AppCompatActivity {
         }
     }
 
-    private class HttpRequestEvent extends AsyncTask<Void, Void, EventResponse> {
+    private class HttpRequestEvent extends AsyncTask<Void, Void, EventResponse[]> {
         private String token;
         private SyncronizationActivity activity;
         private String ErrorMessage;
@@ -274,7 +260,7 @@ public class SyncronizationActivity extends AppCompatActivity {
         }
 
         @Override
-        protected EventResponse doInBackground(Void... params) {
+        protected EventResponse[] doInBackground(Void... params) {
             try {
                 activity=SyncronizationActivity.this;
                 activity.runOnUiThread(new Runnable() {
@@ -282,7 +268,7 @@ public class SyncronizationActivity extends AppCompatActivity {
                         progressBar = ProgressDialog.show(SyncronizationActivity.this, "Please wait ...", "Sincronizando con eventos ...", true);
                         progressBar.setCancelable(false);
                     }});
-                final String url = "http://eventus.la/services/event/71";
+                final String url = static_url+"event/";
 
                 RestTemplate restTemplate = new RestTemplate();
                 // Add the Jackson and String message converters
@@ -293,8 +279,8 @@ public class SyncronizationActivity extends AppCompatActivity {
                 requestHeaders.setContentType(new MediaType("application","json"));
                 requestHeaders.add("token",token);
                 org.springframework.http.HttpEntity requestEntity = new org.springframework.http.HttpEntity(requestHeaders);
-                ResponseEntity<EventResponse> responseEntity = restTemplate.exchange(url, HttpMethod.GET, requestEntity,EventResponse.class);
-                EventResponse result = responseEntity.getBody();
+                ResponseEntity<EventResponse[]> responseEntity = restTemplate.exchange(url, HttpMethod.GET, requestEntity,EventResponse[].class);
+                EventResponse[] result = responseEntity.getBody();
                 return result;
             } catch (Exception e) {
                 Log.e("MainActivity", e.getMessage(), e);
@@ -304,11 +290,13 @@ public class SyncronizationActivity extends AppCompatActivity {
             }
         }
         @Override
-        protected void onPostExecute(EventResponse greeting)
+        protected void onPostExecute(EventResponse[] greeting)
         {
             if(greeting!=null) {
                 SqlliteConsulter MDB= new SqlliteConsulter(SyncronizationActivity.this.getApplicationContext());
-                MDB.AddEvent(greeting);
+                for(EventResponse gre:greeting){
+                    MDB.AddEvent(gre);
+                }
                 new HttpRequestActivity(token,greeting).execute();
             }
             else
@@ -321,12 +309,12 @@ public class SyncronizationActivity extends AppCompatActivity {
     private class HttpRequestActivity extends AsyncTask<Void, Void, List<ActivityResponse>> {
         private String token;
         private List<ActivityResponse> activityResponses;
-        private EventResponse eventResponses;
+        private EventResponse[] eventResponses;
         private SyncronizationActivity activity;
         private String ErrorMessage;
         private ProgressDialog progressBar;
 
-        HttpRequestActivity(String token,EventResponse eventResponses) {
+        HttpRequestActivity(String token,EventResponse[] eventResponses) {
             this.token=token;
             this.eventResponses=eventResponses;
             progressBar = new ProgressDialog(SyncronizationActivity.this);
@@ -342,17 +330,17 @@ public class SyncronizationActivity extends AppCompatActivity {
                     progressBar.setCancelable(false);
                 }});
             activityResponses= new ArrayList<ActivityResponse>();
-            /*for (EventResponse eventResponse:eventResponses) {*/
+            for (EventResponse eventResponse:eventResponses) {
                 try {
-                    final String url = "http://eventus.la//services//"+eventResponses.getSlug()+"//activities//?limit=1000";
+                    final String url = static_url + "services/" + eventResponse.getSlug() + "/activities/?limit=1000";
                     //Create an HTTP client
                     HttpClient client = new DefaultHttpClient();
                     HttpGet post = new HttpGet(url);
-                    post.setHeader("token",token);
+                    post.setHeader("token", token);
                     //Perform the request and check the status code
                     HttpResponse response = client.execute(post);
                     StatusLine statusLine = response.getStatusLine();
-                    if(statusLine.getStatusCode() == 200) {
+                    if (statusLine.getStatusCode() == 200) {
                         HttpEntity entity = response.getEntity();
                         InputStream content = entity.getContent();
 
@@ -365,9 +353,9 @@ public class SyncronizationActivity extends AppCompatActivity {
                                 total.append(line).append('\n');
                             }
 
-                            JSONArray start_object=new JSONArray(new JSONObject(total.toString()).getString("data"));
-                            if(start_object.length()>0){
-                                for (int i=0; i < start_object.length();i++) {
+                            JSONArray start_object = new JSONArray(new JSONObject(total.toString()).getString("data"));
+                            if (start_object.length() > 0) {
+                                for (int i = 0; i < start_object.length(); i++) {
                                     JSONObject jsonObject = start_object.getJSONObject(i);
                                     ActivityResponse activityResponse = new ActivityResponse();
                                     activityResponse.setPk(jsonObject.getString("pk"));
@@ -403,10 +391,11 @@ public class SyncronizationActivity extends AppCompatActivity {
                         Log.e("SingACtitvity", "Server responded with status code: " + statusLine.getStatusCode());
                         //failedLoadingPosts();
                     }
-                } catch(Exception e) {
+                } catch (Exception e) {
                     Log.e("SingACtitvity", e.getMessage(), e);
                     //failedLoadingPosts();
                 }
+            }
 
 
             SqlliteConsulter MDB= new SqlliteConsulter(SyncronizationActivity.this.getApplicationContext());
@@ -427,12 +416,12 @@ public class SyncronizationActivity extends AppCompatActivity {
         private String token;
         private List<RegisterResponse>registerResponses;
         private List<ActivityResponse> activityResponses;
-        private EventResponse eventResponses;
+        private EventResponse[] eventResponses;
         private SyncronizationActivity activity;
         private String ErrorMessage;
         private ProgressDialog progressBar;
 
-        HttpRequestRegisters(String token, List<ActivityResponse> activityResponses, EventResponse eventResponses) {
+        HttpRequestRegisters(String token, List<ActivityResponse> activityResponses, EventResponse[] eventResponses) {
             this.token = token;
             this.activityResponses = activityResponses;
             this.eventResponses = eventResponses;
@@ -450,19 +439,19 @@ public class SyncronizationActivity extends AppCompatActivity {
                 }});
             SqlliteConsulter MDB= new SqlliteConsulter(SyncronizationActivity.this.getApplicationContext());
             registerResponses=new ArrayList<RegisterResponse>();
-            /*for (EventResponse eventResponse : eventResponses) {*/
+            for (EventResponse eventResponse : eventResponses) {
                 for (ActivityResponse activityResponse : activityResponses) {
-                    if(activityResponse.getEvent().equals(eventResponses.getPk())) {
+                    if (activityResponse.getEvent().equals(eventResponse.getPk())) {
                         try {
-                            final String url = "http://eventus.la//services//" + eventResponses.getSlug() + "//activities//"+activityResponse.getPk()+"//registers-movil//";
+                            final String url = static_url + "services/" + eventResponse.getSlug() + "/activities/" + activityResponse.getPk() + "/registers-movil/";
                             //Create an HTTP client
                             HttpClient client = new DefaultHttpClient();
                             HttpGet post = new HttpGet(url);
-                            post.setHeader("token",token);
+                            post.setHeader("token", token);
                             //Perform the request and check the status code
                             HttpResponse response = client.execute(post);
                             StatusLine statusLine = response.getStatusLine();
-                            if(statusLine.getStatusCode() == 200) {
+                            if (statusLine.getStatusCode() == 200) {
                                 HttpEntity entity = response.getEntity();
                                 InputStream content = entity.getContent();
 
@@ -475,11 +464,11 @@ public class SyncronizationActivity extends AppCompatActivity {
                                         total.append(line).append('\n');
                                     }
 
-                                    JSONArray start_object=new JSONArray(new JSONObject(total.toString()).getString("data"));
-                                    if(start_object.length()>0){
-                                        for (int i=0; i < start_object.length();i++) {
+                                    JSONArray start_object = new JSONArray(new JSONObject(total.toString()).getString("data"));
+                                    if (start_object.length() > 0) {
+                                        for (int i = 0; i < start_object.length(); i++) {
                                             JSONObject jsonObject = start_object.getJSONObject(i);
-                                            RegisterResponse registerResponse= new RegisterResponse();
+                                            RegisterResponse registerResponse = new RegisterResponse();
                                             registerResponse.setPk(jsonObject.getString("pk"));
                                             registerResponse.setActivity(jsonObject.getString("activity"));
                                             registerResponse.setHave_attendance(jsonObject.getString("have_attendance"));
@@ -487,12 +476,12 @@ public class SyncronizationActivity extends AppCompatActivity {
                                             registerResponse.getRegister().setPk(objectRegister.getString("pk"));
                                             JSONObject objectTicket = new JSONObject(objectRegister.getString("ticket"));
                                             registerResponse.getRegister().getTicket().setName(objectTicket.getString("name"));
-                                            JSONObject objectPerson= new JSONObject(objectRegister.getString("person"));
+                                            JSONObject objectPerson = new JSONObject(objectRegister.getString("person"));
                                             registerResponse.getRegister().getPerson().setFirst_name(objectPerson.getString("first_name"));
                                             registerResponse.getRegister().getPerson().setLast_name(objectPerson.getString("last_name"));
                                             registerResponses.add(registerResponse);
-                                            if (registerResponse.getHave_attendance().equals("true")){
-                                                MDB.AddAssitanceInSync(registerResponse.getActivity(),registerResponse.getRegister().getPk());
+                                            if (registerResponse.getHave_attendance().equals("true")) {
+                                                MDB.AddAssitanceInSync(registerResponse.getActivity(), registerResponse.getRegister().getPk());
                                             }
 
                                         }
@@ -506,11 +495,13 @@ public class SyncronizationActivity extends AppCompatActivity {
                                 Log.e("SingACtitvity", "Server responded with status code: " + statusLine.getStatusCode());
                                 //failedLoadingPosts();
                             }
-                        } catch(Exception e) {
+                        } catch (Exception e) {
                             Log.e("SingACtitvity", e.getMessage(), e);
                             //failedLoadingPosts();
                         }
 
+
+                    }
                 }
             }
             return registerResponses;
