@@ -29,14 +29,25 @@ import org.springframework.http.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
+import Objects.FrequentlySync;
 import Objects.LogInResponse;
+import Objects.SyncDbObj;
+import Objects.SyncObject;
 import Objects.User;
 import dbapp.SqlliteConsulter;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
@@ -64,13 +75,21 @@ public class MainActivity extends AppCompatActivity{
         else{
             static_url=Global_Variables.PROD_STATIC_URL;
         }
-
+        getSupportActionBar().hide();
         SqlliteConsulter MDB= new SqlliteConsulter(MainActivity.this.getApplicationContext());
         User user_logged=MDB.isLoggedUser();
         if(user_logged!=null){
-            this.finish();
-            Intent intent= new Intent(MainActivity.this,SyncActivity.class);
-            startActivity(intent);
+            int count=MDB.get_count_sync();
+            if (count > 0){
+                new HttpRequestFrequentlySync(user_logged.getToken()).execute();
+
+            }
+            else{
+                Intent intent= new Intent(MainActivity.this,SyncActivity.class);
+                intent.putExtra("token",user_logged.getToken());
+                startActivity(intent);
+            }
+
         }
         setContentView(R.layout.activity_login);
         //evento login
@@ -78,22 +97,11 @@ public class MainActivity extends AppCompatActivity{
         milogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               /* if (validate()) {
-                    Toast.makeText(MainActivity.this,"Validacion",Toast.LENGTH_SHORT).show();
-                    //onSignupFailed();
-                   // return;
-                }*/
                 inputEmail=(EditText)findViewById(R.id.txtEmail);
                 inputPass=(EditText)findViewById(R.id.txtPass);
                 String email= inputEmail.getText().toString();
                 String pass= inputPass.getText().toString();
-                //Toast.makeText(MainActivity.this,"Presiono login",Toast.LENGTH_SHORT).show();
-                //makePostRequest();
                 new HttpRequestTask(email,pass).execute();
-
-               // Intent intent = new Intent (v.getContext(),Main2ActivityCongre.class);
-                //startActivityForResult(intent,0);
-
             }
         });
         if(ringProgressDialog != null) {
@@ -271,6 +279,99 @@ public class MainActivity extends AppCompatActivity{
         }
 
     }
+    private class HttpRequestFrequentlySync extends AsyncTask<Void, Void, SyncObject> {
+        private String token;
+        private MainActivity activity;
+        private SqlliteConsulter MDB= new SqlliteConsulter(MainActivity.this.getApplicationContext());
+        private String ErrorMessage;
+        private ProgressDialog progressBar;
+        HttpRequestFrequentlySync(String token) {
+            this.token=token;
+            progressBar = new ProgressDialog(MainActivity.this);
+
+        }
+
+        @Override
+        protected SyncObject doInBackground(Void... params) {
+            try {
+                activity=MainActivity.this;
+                activity.runOnUiThread(new Runnable() {
+                    public void run() {
+                        progressBar = ProgressDialog.show(MainActivity.this, "Espere por favor ...", "Sincronizando información...", true);
+                        progressBar.setCancelable(false);
+                    }});
+                final String url = static_url+"services/data/download/";
+                SyncDbObj syncDbObj=MDB.get_last_sync_success();
+                String startDate="";
+                Date startAt;
+                DateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss 'GMT'Z yyyy", Locale.ENGLISH);
+                try{
+                    Date formattedDate = dateFormat.parse(syncDbObj.getDate().toString());
+                    SimpleDateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    dateFormatGmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    startDate=dateFormatGmt.format(formattedDate);
+                }catch(ParseException parseEx){
+                    parseEx.printStackTrace();
+                }
+
+                RestTemplate restTemplate = new RestTemplate();
+                // Add the Jackson and String message converters
+                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+                //restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+                restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+                HttpHeaders requestHeaders = new HttpHeaders();
+                //DefaultHttpClient httpClient = new DefaultHttpClient();
+                //HttpPost httpRequest = new HttpPost(url);
+                /*httpRequest.setEntity(new StringEntity("{\"estimate\":false}"));
+                httpRequest.setHeader("content-type", "application/json");
+                httpRequest.setHeader("token",token);*/
+                requestHeaders.setContentType(new MediaType("application","json"));
+                requestHeaders.add("token",token);
+                FrequentlySync frequentlySync =new FrequentlySync();
+                frequentlySync.setEstimate("false");
+                frequentlySync.setLast_sync(startDate);
+                org.springframework.http.HttpEntity requestEntity = new org.springframework.http.HttpEntity(frequentlySync,requestHeaders);
+                ResponseEntity<SyncObject> responseEntity = restTemplate.exchange(url, HttpMethod.POST, requestEntity,SyncObject.class);
+                SyncObject result = responseEntity.getBody();
+                if (result.getEvents().size()>0 && result.getActivities().size() >0 && result.getRegisters().size()>0) {
+                    MDB.AddEvent(result.getEvents());
+                    MDB.AddActivity(result.getActivities());
+                    MDB.AddRegister(result.getRegisters());
+                    MDB.insertActualization(true);
+                }
+
+                //HttpResponse result=httpClient.execute(httpRequest);
+                return result;
+            } catch (Exception e) {
+                Log.e("MainActivity", e.getMessage(), e);
+                ErrorMessage=e.getMessage();
+
+                return null;
+            }
+        }
+        @Override
+        protected void onPostExecute(SyncObject greeting)
+        {
+            if(greeting!=null) {
+                Intent intent= new Intent(MainActivity.this,ListEventActivity.class);
+                intent.putExtra("token",token);
+                startActivity(intent);
+                MainActivity.this.finish();
+                progressBar.dismiss();
+            }
+            else
+            {
+                MDB.insertActualization(false);
+                Intent intent= new Intent(MainActivity.this,ListEventActivity.class);
+                intent.putExtra("token",token);
+                startActivity(intent);
+                MainActivity.this.finish();
+                Toast.makeText(activity,"Error al descargar información",Toast.LENGTH_SHORT).show();
+            }
+            progressBar.dismiss();
+        }
+    }
+
 
 
 }

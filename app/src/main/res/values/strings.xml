@@ -12,4 +12,7 @@
     <string name="yes">YES</string>
     <string name="cancel">CANCEL</string>
     <string name="continue_nav">CONTINUE</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
 </resources>

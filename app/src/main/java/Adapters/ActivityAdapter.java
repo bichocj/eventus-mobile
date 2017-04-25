@@ -73,7 +73,7 @@ public class ActivityAdapter extends ArrayAdapter<ActivityResponse> {
 
 
                 holder.display_name.setText(lActivities.get(position).getName());
-                holder.display_number.setText(lActivities.get(position).getAddress());
+                holder.display_number.setText(lActivities.get(position).getStarts_at());
 
 
             } catch (Exception e) {

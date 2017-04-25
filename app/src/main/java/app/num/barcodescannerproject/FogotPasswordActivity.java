@@ -11,13 +11,28 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+
+import com.fasterxml.jackson.databind.SerializationFeature;
+
+import Objects.ForgotPassResponse;
+import cz.msebera.android.httpclient.HttpResponse;
+import cz.msebera.android.httpclient.client.methods.HttpPost;
+import cz.msebera.android.httpclient.entity.StringEntity;
+import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
+
+import org.json.JSONObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
 
 import Objects.LogInResponse;
 import Objects.User;
@@ -41,6 +56,7 @@ public class FogotPasswordActivity extends AppCompatActivity {
         else{
             static_url=Global_Variables.PROD_STATIC_URL;
         }
+        getSupportActionBar().hide();
         forgot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -64,21 +80,21 @@ public class FogotPasswordActivity extends AppCompatActivity {
         this.finish();
         startActivity(intent);
     }
-    private class HttpRequestTask extends AsyncTask<Void, Void, LogInResponse> {
+    private class HttpRequestTask extends AsyncTask<Void, Void, Boolean> {
         private String inputEmail;
         private FogotPasswordActivity activity;
         private ProgressDialog progressBar;
 
         HttpRequestTask(String email) {
-            this.inputEmail=email;
+            this.inputEmail = email;
             progressBar = new ProgressDialog(FogotPasswordActivity.this);
 
         }
 
         @Override
-        protected LogInResponse doInBackground(Void... params) {
+        protected Boolean doInBackground(Void... params) {
             try {
-                activity=FogotPasswordActivity.this;
+                activity = FogotPasswordActivity.this;
                 activity.runOnUiThread(new Runnable() {
                     public void run() {
                         progressBar = ProgressDialog.show(FogotPasswordActivity.this, "Espere por favor ...", "Verificando datos ...", true);
@@ -87,37 +103,59 @@ public class FogotPasswordActivity extends AppCompatActivity {
                     }
                 });
 
-                final String url = static_url+"services/emesh/event_team/reset-password/";
+                final String url = static_url + "services/reset-password/";
 
+                /*DefaultHttpClient httpClient = new DefaultHttpClient();
+                HttpPost httpRequest = new HttpPost(url);
+                httpRequest.setEntity(new StringEntity("{\"email\":"+inputEmail+"}"));
+                httpRequest.setHeader("content-type", "application/json");
+                HttpResponse result=httpClient.execute(httpRequest);*/
                 RestTemplate restTemplate = new RestTemplate();
                 // Add the Jackson and String message converters
-                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+                MappingJackson2HttpMessageConverter jsonHttpMessageConverter = new MappingJackson2HttpMessageConverter();
+                jsonHttpMessageConverter.getObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+
+                restTemplate.getMessageConverters().add(jsonHttpMessageConverter);
                 //restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
                 restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-                String username = inputEmail;
-                User user= new User();
-                user.setUsername(username);
+                //MultiValueMap<String, String> body = new LinkedMultiValueMap<String, String>();
+                //body.add("email","aj.dalmao.aqp@gmail.com");
+                ForgotPassResponse forgotPassResponse = new ForgotPassResponse();
+                forgotPassResponse.setEmail(inputEmail);
                 HttpHeaders requestHeaders = new HttpHeaders();
-                requestHeaders.setContentType(new MediaType("application","json"));
-                org.springframework.http.HttpEntity<User> requestEntity = new org.springframework.http.HttpEntity<User>(user, requestHeaders);
-                ResponseEntity<LogInResponse> responseEntity = restTemplate.exchange(url, HttpMethod.POST, requestEntity, LogInResponse.class);
-                LogInResponse result = responseEntity.getBody();
-                return result;
+                requestHeaders.setContentType(MediaType.APPLICATION_JSON);
+                requestHeaders.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+
+
+                org.springframework.http.HttpEntity requestEntity = new org.springframework.http.HttpEntity(forgotPassResponse, requestHeaders);
+                try {
+                    ResponseEntity<ForgotPassResponse> responseEntity = restTemplate.exchange(url, HttpMethod.POST, requestEntity, ForgotPassResponse.class);
+                    if (responseEntity.getStatusCode().value()== 200) {
+                        return true;
+                    }
+                } catch (HttpStatusCodeException exception) {
+                    int statusCode = exception.getStatusCode().value();
+                    return false;
+                }
+
+
             } catch (Exception e) {
                 Log.e("MainActivity", e.getMessage(), e);
                 e.getMessage();
+                return false;
 
 
-                return null;
             }
-
-
+            return false;
         }
 
+
+
+
         @Override
-        protected void onPostExecute(LogInResponse greeting)
+        protected void onPostExecute(Boolean greeting)
         {
-            if(greeting!=null) {
+            if(greeting) {
                 Toast.makeText(FogotPasswordActivity.this, "Se envio un correo con un link para actualizar su contraseña. . .", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(FogotPasswordActivity.this, MainActivity.class);
                 startActivity(intent);

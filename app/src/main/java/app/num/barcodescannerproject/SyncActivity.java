@@ -34,6 +34,7 @@ public class SyncActivity extends AppCompatActivity {
     }
     public  void syncbtnClick(View view){
         Intent intent= new Intent(SyncActivity.this,SyncronizationActivity.class);
+        intent.putExtra("token",token);
         startActivity(intent);
         SyncActivity.this.finish();
     }

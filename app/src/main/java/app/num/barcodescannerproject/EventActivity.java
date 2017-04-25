@@ -45,7 +45,7 @@ public class EventActivity extends AppCompatActivity {
         Date startAt;
         String startDate="";
         try {
-            startAt=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(activityResponse.getStart_at());
+            startAt=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(activityResponse.getStarts_at());
             DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
              startDate= df.format(startAt);
         } catch (ParseException e) {
@@ -54,7 +54,7 @@ public class EventActivity extends AppCompatActivity {
         Date endAt;
         String endDate="";
         try {
-            endAt=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(activityResponse.getEnd_at());
+            endAt=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(activityResponse.getEnds_at());
             DateFormat df = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
             endDate= df.format(endAt);
         } catch (ParseException e) {

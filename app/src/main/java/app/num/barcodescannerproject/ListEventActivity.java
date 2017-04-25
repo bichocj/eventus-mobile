@@ -1,12 +1,22 @@
 package app.num.barcodescannerproject;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -14,6 +24,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,14 +52,38 @@ import dbapp.SqlliteConsulter;
 /**
  * Created by Administrador on 18/07/2016.
  */
-public class ListEventActivity extends AppCompatActivity {
+public class ListEventActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener{
     private String token;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.v_list_events);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        display_username();
         showEvent();
         Toast.makeText(ListEventActivity.this, "List Event", Toast.LENGTH_LONG).show();
+    }
+    public void display_username(){
+        LayoutInflater inflater = getLayoutInflater();
+        View view=inflater.inflate(R.layout.nav_header_event_list,null);
+        TextView textView = (TextView) view.findViewById(R.id.user_name_nav_bar);
+        SqlliteConsulter MDB= new SqlliteConsulter(ListEventActivity.this.getApplicationContext());
+        User user=MDB.isLoggedUser();
+        if (user != null) {
+            textView.setText(user.getUsername());
+        }
     }
     public void showEvent(){
         final SqlliteConsulter MDB= new SqlliteConsulter(ListEventActivity.this.getApplicationContext());
@@ -55,13 +92,60 @@ public class ListEventActivity extends AppCompatActivity {
         if(eventResponseList!=null) {
             EventAdapter adapter= new EventAdapter(ListEventActivity.this,0,eventResponseList);
             lv.setAdapter(adapter);
+
         }
+
+
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
+                final LayoutInflater inflater = getLayoutInflater();
+                ImageView info_view=(ImageView) view.findViewById(R.id.Info);
+                info_view.setOnClickListener(new View.OnClickListener() {
+                    //EventResponse s=lEvents.get(position);
+                    @Override
+                    public void onClick(View v) {
+                        final AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(ListEventActivity.this);
+// ...Irrelevant code for customizing the buttons and title
+                        LayoutInflater inflater = getLayoutInflater();
+                        View dialogView=inflater.inflate(R.layout.event_details_toast,null);
+                        dialogBuilder.setView(dialogView);
+                        EventResponse item = (EventResponse) lv.getItemAtPosition(position);
+                        TextView textView=(TextView) dialogView.findViewById(R.id.title_event_toast);
+                        textView.setText(item.getSlug());
+
+                        TextView textView1=(TextView) dialogView.findViewById(R.id.full_name_event);
+                        textView1.setText(item.getName());
+
+                        TextView textView2=(TextView) dialogView.findViewById(R.id.event_domain);
+                        textView2.setText(item.getDomain());
+
+                        if ((item.getLocalitation().equals("") || item.getLocalitation().equals(null))&&((item.getAddress().equals("") || item.getAddress().equals(null)))) {
+                            TextView textView3 = (TextView) dialogView.findViewById(R.id.location_event);
+                            textView3.setText(item.getLocalitation()+"/"+item.getAddress());
+                            textView3.setVisibility(View.VISIBLE);
+                        }
+                        if (item.getStart_at().equals("") || item.getStart_at().equals(null)) {
+                            TextView textView4 = (TextView) dialogView.findViewById(R.id.date_event);
+                            textView4.setText(item.getStart_at());
+                            textView4.setVisibility(View.VISIBLE);
+                        }
+                        TextView textView5=(TextView)dialogView.findViewById(R.id.success_btn_toast);
+
+                        final AlertDialog alertDialog=dialogBuilder.create();
+                        textView5.setOnClickListener(new View.OnClickListener(){
+                            @Override
+                            public void onClick(View v) {
+                                alertDialog.dismiss();
+                            }
+                        });
+                        alertDialog.show();
+                    }
+                });
                 EventResponse item = (EventResponse) lv.getItemAtPosition(position);
                 Intent intent = new Intent(ListEventActivity.this, ListActivitiesActivity.class);
                 intent.putExtra("pkEvent",item.getPk());
+                intent.putExtra("nameEvent",item.getSlug());
                 startActivity(intent);
             }
         });
@@ -117,4 +201,9 @@ public class ListEventActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+
+        return false;
+    }
 }

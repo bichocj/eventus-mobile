@@ -64,7 +64,6 @@ public class RegisterAdapter extends ArrayAdapter<RegisterResponse> {
                     holder = new ViewHolder();
 
                     holder.display_name = (TextView) vi.findViewById(R.id.nameRegister_tv);
-                    holder.display_number = (TextView) vi.findViewById(R.id.TicketType_tv);
                     holder.display_img = (ImageView) vi.findViewById(R.id.Register_ImgV);
 
 
@@ -80,8 +79,7 @@ public class RegisterAdapter extends ArrayAdapter<RegisterResponse> {
                     holder.display_img.setImageResource(R.drawable.ic_cruz_black);
                 }
 
-                holder.display_name.setText(lActivities.get(position).getRegister().getPerson().getFirst_name()+' '+lActivities.get(position).getRegister().getPerson().getLast_name());
-                holder.display_number.setText(lActivities.get(position).getRegister().getTicket().getName());
+                holder.display_name.setText(lActivities.get(position).getFirst_name()+' '+lActivities.get(position).getLast_name());
 
 
             } catch (Exception e) {

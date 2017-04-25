@@ -6,7 +6,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -52,7 +54,7 @@ public class EventAdapter extends ArrayAdapter<EventResponse> {
 
         }
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             View vi = convertView;
             final ViewHolder holder;
             try {
@@ -60,8 +62,8 @@ public class EventAdapter extends ArrayAdapter<EventResponse> {
                     vi = inflater.inflate(R.layout.item_view_event, null);
                     holder = new ViewHolder();
 
-                    holder.display_name = (TextView) vi.findViewById(R.id.event_name_tv);
-                    holder.display_number = (TextView) vi.findViewById(R.id.event_date_tv);
+                    holder.display_number  = (TextView) vi.findViewById(R.id.event_name_tv);
+                    holder.display_name= (TextView) vi.findViewById(R.id.event_date_tv);
 
 
                     vi.setTag(holder);

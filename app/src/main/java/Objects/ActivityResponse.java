@@ -11,141 +11,68 @@ import java.io.Serializable;
 public class ActivityResponse implements Serializable {
     String pk;
     String name;
-    java.lang.String start_at;
-    java.lang.String end_at;
-    java.lang.String address;
-    java.lang.String capacity;
-    Type _type;
-    java.lang.String event;
-    java.lang.String speaker;
-    java.lang.String avaliable;
-    java.lang.String registered_number;
-    java.lang.String attendees;
-    java.lang.String institution;
+    String starts_at;
+    String ends_at;
+    String event;
+    String info_about ;
 
-    public java.lang.String getPk() {
-        return pk;
-    }
-
-    public void setPk(java.lang.String pk) {
-        this.pk = pk;
-    }
-
-    public java.lang.String getName() {
-        return name;
-    }
-
-    public void setName(java.lang.String name) {
-        this.name = name;
-    }
-
-    public java.lang.String getStart_at() {
-        return start_at;
-    }
-
-    public void setStart_at(java.lang.String start_at) {
-        this.start_at = start_at;
-    }
-
-    public java.lang.String getEnd_at() {
-        return end_at;
-    }
-
-    public void setEnd_at(java.lang.String end_at) {
-        this.end_at = end_at;
-    }
-
-    public java.lang.String getAddress() {
-        return address;
-    }
-
-    public void setAddress(java.lang.String address) {
-        this.address = address;
-    }
-
-    public java.lang.String getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(java.lang.String capacity) {
-        this.capacity = capacity;
-    }
-
-    public Type getType() {
-        return _type;
-    }
-
-    public void setType(Type type) {
-        this._type = type;
-    }
-
-    public java.lang.String getEvent() {
-        return event;
-    }
-
-    public void setEvent(java.lang.String event) {
-        this.event = event;
-    }
-
-    public java.lang.String getSpeaker() {
-        return speaker;
-    }
-
-    public void setSpeaker(java.lang.String speaker) {
-        this.speaker = speaker;
-    }
-
-    public java.lang.String getAvaliable() {
-        return avaliable;
-    }
-
-    public void setAvaliable(java.lang.String avaliable) {
-        this.avaliable = avaliable;
-    }
-
-    public java.lang.String getRegistered_number() {
-        return registered_number;
-    }
-
-    public void setRegistered_number(java.lang.String registered_number) {
-        this.registered_number = registered_number;
-    }
-
-    public java.lang.String getAttendees() {
-        return attendees;
-    }
-
-    public void setAttendees(java.lang.String attendees) {
-        this.attendees = attendees;
-    }
-
-    public java.lang.String getInstitution() {
-        return institution;
-    }
-
-    public void setInstitution(java.lang.String institution) {
-        this.institution = institution;
-    }
-
-    public ActivityResponse(java.lang.String pk, java.lang.String name, java.lang.String start_at, java.lang.String end_at, java.lang.String address, java.lang.String capacity, java.lang.String eventtype, java.lang.String maxnumber, java.lang.String event, java.lang.String speaker, java.lang.String avaliable, java.lang.String registered_number, java.lang.String attendees, java.lang.String institution) {
+    public ActivityResponse(String pk, String name, String starts_at, String ends_at, String event, String info_about) {
         this.pk = pk;
         this.name = name;
-        this.start_at = start_at;
-        this.end_at = end_at;
-        this.address = address;
-        this.capacity = capacity;
-        this._type=new Type();
-        this._type.setLowercased(eventtype);
+        this.starts_at = starts_at;
+        this.ends_at = ends_at;
         this.event = event;
-        this.speaker = speaker;
-        this.avaliable = avaliable;
-        this.registered_number = registered_number;
-        this.attendees = attendees;
-        this.institution = institution;
+        this.info_about = info_about;
     }
 
     public ActivityResponse() {
-        _type=new Type();
+    }
 
+    public String getPk() {
+        return pk;
+    }
+
+    public void setPk(String pk) {
+        this.pk = pk;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getStarts_at() {
+        return starts_at;
+    }
+
+    public void setStarts_at(String starts_at) {
+        this.starts_at = starts_at;
+    }
+
+    public String getEnds_at() {
+        return ends_at;
+    }
+
+    public void setEnds_at(String ends_at) {
+        this.ends_at = ends_at;
+    }
+
+    public String getEvent() {
+        return event;
+    }
+
+    public void setEvent(String event) {
+        this.event = event;
+    }
+
+    public String getInfo_about() {
+        return info_about;
+    }
+
+    public void setInfo_about(String info_about) {
+        this.info_about = info_about;
     }
 }
