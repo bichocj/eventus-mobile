@@ -1,6 +1,18 @@
+general:
+    artifacts:
+        - /home/ubuntu/app/build/outputs/apk/
 machine:
   environment:
-    QEMU_AUDIO_DRV: none
+#    QEMU_AUDIO_DRV: none
+    ANDROID_HOME: /usr/local/android-sdk-linux
+
+dependencies:
+  override:
+    - chmod +x gradlew
+  pre:
+    - echo y | android update sdk --no-ui --all --filter "tools,platform-tools,android-23"
+    - echo y | android update sdk --no-ui --all --filter "build-tools-23.0.2"
+
 deployment:
   production: # just a label; label names are completely up to you
     branch: master
