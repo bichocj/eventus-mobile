@@ -5,6 +5,7 @@ deployment:
   production: # just a label; label names are completely up to you
     branch: master
     commands:
+      - ls
       - chmod +x gradlew
       - ./gradlew publishApkRelease
         -Dorg.gradle.project.track=production
