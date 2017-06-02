@@ -1,45 +1,32 @@
 general:
     artifacts:
-        - /home/ubuntu/app/build/outputs/apk/
+        - /home/ubuntu/AndroidApp/app/build/outputs/apk/
+
 machine:
-  environment:
-   QEMU_AUDIO_DRV: none
-    # ANDROID_HOME: /usr/local/android-sdk-linux
-
+    environment:
+        ANDROID_HOME: /usr/local/android-sdk-linux
+        GRADLE_OPTS: '-Dorg.gradle.jvmargs="-Xmx2048m -XX:+HeapDumpOnOutOfMemoryError"'
+        _JAVA_OPTIONS: "-Xms512m -Xmx1024m"
+  java:
+    version: oraclejdk8
+    
 dependencies:
-  override:
-    - chmod +x gradlew
-  pre:
-    # - echo y | android update sdk --no-ui --all --filter "package-name"
-    - echo y | android update sdk --no-ui --all --filter "tools,platform-tools,android-23"
-    - echo y | android update sdk --no-ui --all --filter "build-tools-23.0.2"
-
-deployment:
-  production: # just a label; label names are completely up to you
-    branch: master
-    commands:
-      - ./gradlew publishApkRelease
-        -Dorg.gradle.project.track=production
-  beta:
-    branch: develop
-    commands:
-      - ./gradlew publishApkRelease
-        -Dorg.gradle.project.track=beta
+    pre:
+        - echo y | android update sdk --no-ui --all --filter tools,platform-tools,android-25
+        - echo y | android update sdk --no-ui --all --filter build-tools-25.0.2
+        - echo y | android update sdk --no-ui --all --filter android-25
+        - echo y | android update sdk --no-ui --all --filter tools
+        - echo y | android update sdk --no-ui --all --filter extra-android-m2repository
+        - echo y | android update sdk --no-ui --all --filter extra-android-support
+        - echo y | android update sdk --no-ui --all --filter extra-google-google_play_services
+        - echo y | android update sdk --no-ui --all --filter extra-google-m2repository
+    override:
+        - chmod +x gradlew
+        - ANDROID_HOME=/usr/local/android-sdk-linux ./gradlew dependencies
 
 test:
-  override:
-    # start the emulator
-    - emulator -avd circleci-android24 -no-window:
-        background: true
-        parallel: true
-    # wait for it to have booted
-    - circle-android wait-for-boot
-    # run tests  against the emulator.
-    - ./gradlew connectedAndroidTest
-    # copy the build outputs to artifacts
-    # - mkdir build/outputs
-    - ls
-    - cp -r build/outputs $CIRCLE_ARTIFACTS
-    # copy the test results to the test results directory.
-    # - mkdir build/outputs/androidTest-results
-    - cp -r build/outputs/androidTest-results/* $CIRCLE_TEST_REPORTS
+    override:
+        - (./gradlew assemble):
+            timeout: 360
+        # copy the build outputs to artifacts
+        - cp -r app/build/outputs $CIRCLE_ARTIFACTS 
