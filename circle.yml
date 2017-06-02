@@ -36,8 +36,8 @@ test:
     # run tests  against the emulator.
     - ./gradlew connectedAndroidTest
     # copy the build outputs to artifacts
-    - mkdir eventus-mobile/build/outputs
-    - cp -r eventus-mobile/build/outputs $CIRCLE_ARTIFACTS
+    # - mkdir build/outputs
+    - cp -r build/outputs $CIRCLE_ARTIFACTS
     # copy the test results to the test results directory.
-    - mkdir eventus-mobile/build/outputs/androidTest-results
-    - cp -r eventus-mobile/build/outputs/androidTest-results/* $CIRCLE_TEST_REPORTS
+    # - mkdir build/outputs/androidTest-results
+    - cp -r build/outputs/androidTest-results/* $CIRCLE_TEST_REPORTS
