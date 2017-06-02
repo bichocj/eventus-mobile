@@ -8,11 +8,17 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import Objects.ActivityResponse;
 import Objects.EventResponse;
+import app.num.barcodescannerproject.ListActivitiesActivity;
 import app.num.barcodescannerproject.R;
+import dbapp.SqlliteConsulter;
 
 /**
  * Created by Administrador on 30/07/2016.
@@ -22,7 +28,7 @@ public class ActivityAdapter extends ArrayAdapter<ActivityResponse> {
         private ArrayList<ActivityResponse> lActivities;
         private static LayoutInflater inflater = null;
 
-        public ActivityAdapter(Activity activity, int textViewResourceId, ArrayList<ActivityResponse> _lActivities) {
+    public ActivityAdapter(Activity activity, int textViewResourceId, ArrayList<ActivityResponse> _lActivities) {
             super(activity, textViewResourceId, _lActivities);
             try {
                 this.activity = activity;
@@ -71,9 +77,23 @@ public class ActivityAdapter extends ArrayAdapter<ActivityResponse> {
                 }
 
 
+                Date startAt;
+                String startDate="";
+                try {
+                    startAt=new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(lActivities.get(position).getStarts_at());
+                    DateFormat df = new SimpleDateFormat("HH:mm a");
+                    startDate= df.format(startAt);
+                } catch (ParseException e) {
+                    startAt=null;
+                }
+                SqlliteConsulter MDB = new SqlliteConsulter(activity);
+                int attendaceQ=MDB.getAttendanceQuantity(lActivities.get(position).getPk());
+                int registers=MDB.getRegisterQuantity(lActivities.get(position).getPk());
+                String quantityAttendance=attendaceQ>=0?String.valueOf(attendaceQ):"--";
+                String quantityRegister=registers>=0?String.valueOf(registers):"--";
 
                 holder.display_name.setText(lActivities.get(position).getName());
-                holder.display_number.setText(lActivities.get(position).getStarts_at());
+                holder.display_number.setText(startDate+" | "+quantityAttendance+'/'+quantityRegister+" Asistentes");
 
 
             } catch (Exception e) {

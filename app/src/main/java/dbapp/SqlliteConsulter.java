@@ -113,39 +113,48 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     }
     public int get_count_sync(){
         SQLiteDatabase db= this.getReadableDatabase();
+        Cursor c=null;
         try {
-            Cursor c = db.rawQuery("SELECT * FROM syncronization", null);
+            c= db.rawQuery("SELECT * FROM syncronization", null);
             return c.getCount();
         }
         catch (SQLiteException e){
             return -1;
+        }finally {
+            if(c !=null)
+            {
+                c.close();
+            }
         }
 
     }
     public SyncDbObj get_last_sync_success(){
         SQLiteDatabase db= this.getReadableDatabase();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM syncronization where success = '0' ORDER BY date DESC LIMIT 1",null);
+            c=db.rawQuery("SELECT * FROM syncronization where success = 0 ",null);
             if (c.getCount() > 0){
                 SyncDbObj syncDbObj;
-                c.moveToFirst();
-                do{
-                    syncDbObj= new SyncDbObj(c.getString(0), c.getString(1), c.getString(2));
-
-                }while(c.moveToNext());
+                c.moveToLast();
+                syncDbObj= new SyncDbObj(c.getString(0), c.getString(1), c.getString(2));
                 return syncDbObj ;
             }
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
 
     }
     public SyncDbObj get_last_sync(){
         SQLiteDatabase db= this.getReadableDatabase();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM syncronization ORDER BY date DESC LIMIT 1",null);
+            c=db.rawQuery("SELECT * FROM syncronization ORDER BY date DESC LIMIT 1",null);
             if (c.getCount() > 0){
                 SyncDbObj syncDbObj;
                 c.moveToFirst();
@@ -158,6 +167,10 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
 
@@ -181,32 +194,67 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     {
         SQLiteDatabase db= getWritableDatabase();
         for (RegisterResponse registerResponse:registerResponses) {
-            String insertExec= "INSERT INTO register(pk,first_name , last_name)" +
-                    "VALUES(?1,?2,?3)";
-            SQLiteStatement stm= db.compileStatement(insertExec);
-            stm.bindString(1,""+registerResponse.getPk());
-            stm.bindString(2,""+registerResponse.getFirst_name());
-            stm.bindString(3,""+registerResponse.getLast_name());
-            stm.execute();
+            try {
+                String insertExec = "INSERT INTO register(pk,first_name , last_name)" +
+                        "VALUES(?1,?2,?3)";
+                SQLiteStatement stm = db.compileStatement(insertExec);
+                stm.bindString(1, "" + registerResponse.getPk());
+                stm.bindString(2, "" + registerResponse.getFirst_name());
+                stm.bindString(3, "" + registerResponse.getLast_name());
+                stm.execute();
+            }catch (Exception e){
+                try{
+                    ContentValues valores = new ContentValues();
+                    valores.put("first_name",registerResponse.getFirst_name());
+                    valores.put("last_name",registerResponse.getLast_name());
+                    int c=db.update("register", valores, "pk="+registerResponse.getPk(),null);
+
+                }catch (SQLiteException ee){
+
+                }
+
+            }
         }
         return true;
+
     }
     public boolean AddActivity(List<ActivityResponse> activityResponses)
     {
         SQLiteDatabase db= getWritableDatabase();
-        for (ActivityResponse activityResponse:activityResponses) {
-            String insertExec= "INSERT INTO activity(pk,name ,starts_at ,ends_at ,event ,info_about)" +
-                    "VALUES(?1,?2,?3,?4,?5,?6)";
-            SQLiteStatement stm= db.compileStatement(insertExec);
-            stm.bindString(1,""+activityResponse.getPk());
-            stm.bindString(2,""+activityResponse.getName());
-            stm.bindString(3,""+activityResponse.getStarts_at());
-            stm.bindString(4,""+activityResponse.getEnds_at());
-            stm.bindString(5,""+activityResponse.getEvent());
-            stm.bindString(6,""+activityResponse.getInfo_about());
-            stm.execute();
-        }
 
+        for (ActivityResponse activityResponse : activityResponses) {
+            String insertExec = "INSERT INTO activity(pk,name ,starts_at ,ends_at ,event ,info_about)" +
+                    "VALUES(?1,?2,?3,?4,?5,?6)";
+            SQLiteStatement stm = db.compileStatement(insertExec);
+            try {
+                stm.bindString(1, "" + activityResponse.getPk());
+                stm.bindString(2, "" + activityResponse.getName());
+                stm.bindString(3, "" + activityResponse.getStarts_at());
+                stm.bindString(4, "" + activityResponse.getEnds_at());
+                stm.bindString(5, "" + activityResponse.getEvent());
+                stm.bindString(6, "" + activityResponse.getInfo_about());
+                stm.execute();
+                if (activityResponse.getRegistered().size() > 0 && activityResponse.getRegistered() != null) {
+                    for (String pk : activityResponse.getRegistered()) {
+                        TakeAssistance(pk, activityResponse.getPk(), true);
+                    }
+                }
+
+            }catch(Exception e){
+                try {
+                    ContentValues valores = new ContentValues();
+                    valores.put("name", activityResponse.getName());
+                    valores.put("starts_at", activityResponse.getStarts_at());
+                    valores.put("ends_at", activityResponse.getEnds_at());
+                    valores.put("event", activityResponse.getEvent());
+                    valores.put("info_about", activityResponse.getInfo_about());
+                    int c = db.update("activity", valores, "pk=" + activityResponse.getPk(), null);
+
+                } catch (SQLiteException ee) {
+
+                }
+            }
+        }
         return true;
     }
     public boolean AddEvent(List<EventResponse> eventResponses)
@@ -232,8 +280,9 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     public ArrayList<RegisterResponse> showRegister(){
         SQLiteDatabase db= this.getReadableDatabase();
         ArrayList<RegisterResponse> registerResponses= new ArrayList<>();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM register",null);
+            c=db.rawQuery("SELECT * FROM register",null);
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
@@ -246,14 +295,19 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
     }
     public ArrayList<ActivityResponse> showActivity(){
         SQLiteDatabase db= this.getReadableDatabase();
         ArrayList<ActivityResponse> acttivities= new ArrayList<>();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM activity",null);
+            c=db.rawQuery("SELECT * FROM activity",null);
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
@@ -266,6 +320,10 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
     }
@@ -273,8 +331,9 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     public ArrayList<EventResponse> showEvent(){
         SQLiteDatabase db= this.getReadableDatabase();
         ArrayList<EventResponse> events= new ArrayList<>();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM event",null);
+            c=db.rawQuery("SELECT * FROM event",null);
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
@@ -287,6 +346,10 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
     }
@@ -294,8 +357,9 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     public ArrayList<ActivityResponse> getActivities(String pk) {
         SQLiteDatabase db= this.getReadableDatabase();
         ArrayList<ActivityResponse> activityResponses= new ArrayList<>();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM activity WHERE event= ? ",new String[]{pk});
+            c=db.rawQuery("SELECT * FROM activity WHERE event= ? ",new String[]{pk});
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
@@ -308,16 +372,45 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
 
+    }
+    public EventResponse getEvent(String pkEvent) {
+        SQLiteDatabase db= this.getReadableDatabase();
+        EventResponse event;
+        Cursor c=null;
+        try{
+            c=db.rawQuery("SELECT * FROM event WHERE pk= ? ",new String[]{pkEvent});
+            if (c.getCount() > 0){
+                c.moveToFirst();
+                do{
+                    event = new EventResponse(c.getString(0), c.getString(1), c.getString(2),c.getString(3),c.getString(4),c.getString(5),c.getString(6),c.getString(7));
+
+                }while(c.moveToNext());
+                return event;
+            }
+
+        }catch (SQLiteException e){
+            return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
+        }
+        return null;
     }
 
     public ActivityResponse getActivity(String pkActivity) {
         SQLiteDatabase db= this.getReadableDatabase();
         ActivityResponse activity;
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM activity WHERE pk= ? ",new String[]{pkActivity});
+            c=db.rawQuery("SELECT * FROM activity WHERE pk= ? ",new String[]{pkActivity});
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
@@ -329,6 +422,10 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
     }
@@ -336,8 +433,9 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     public ArrayList<RegisterResponse> getRegisters(String pkEvent, String pkActivity) {
         SQLiteDatabase db= this.getReadableDatabase();
         ArrayList<RegisterResponse> activityResponses= new ArrayList<>();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM register ",null);
+            c=db.rawQuery("SELECT * FROM register ORDER BY first_name ASC",null);
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
@@ -350,6 +448,10 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
     }
@@ -357,14 +459,19 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     public int getRegisterQuantity(String pkActivity){
         SQLiteDatabase db= this.getWritableDatabase();
         ArrayList<RegisterResponse> registers= new ArrayList<>();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM register",null);
+            c=db.rawQuery("SELECT * FROM register",null);
             if (c.getCount() > 0){
                 return c.getCount();
             }
 
         }catch (SQLiteException e){
             return -1;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return -1;
 
@@ -372,14 +479,19 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
     public int getRegisterQuantityAll(){
         SQLiteDatabase db= this.getWritableDatabase();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM register ",null);
+            c=db.rawQuery("SELECT * FROM register ",null);
             if (c.getCount() > 0){
                 return c.getCount();
             }
 
         }catch (SQLiteException e){
             return -1;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return -1;
 
@@ -388,39 +500,50 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     public int getAttendanceQuantity(String pkActivity){
         SQLiteDatabase db= this.getWritableDatabase();
         ArrayList<AttendanceClass> attendances= new ArrayList<>();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM attendance WHERE activity= ? ",new String[]{pkActivity});
+            c=db.rawQuery("SELECT * FROM attendance WHERE activity= ? ",new String[]{pkActivity});
             if (c.getCount() > 0){
                 return c.getCount();
             }
 
         }catch (SQLiteException e){
             return -1;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return -1;
 
     }
     public boolean have_attendance(String pk_Activity, String pk_register){
         SQLiteDatabase db=this.getWritableDatabase();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM attendance WHERE activity = ? AND register= ?",new String[]{pk_Activity,pk_register});
+            c=db.rawQuery("SELECT * FROM attendance WHERE activity = ? AND register= ?",new String[]{pk_Activity,pk_register});
             if (c.getCount() > 0){
                 return true;
             }
             return false;
         }catch (SQLiteException e){
             return false;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
     }
     public ArrayList<AttendanceClass> getAttendance(){
         SQLiteDatabase db= this.getWritableDatabase();
         ArrayList<AttendanceClass> attendances= new ArrayList<>();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM attendance WHERE server = 0",null);
+            c=db.rawQuery("SELECT * FROM attendance WHERE server = 0",null);
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
-                    AttendanceClass attendance = new AttendanceClass(c.getString(1), c.getString(2));
+                    AttendanceClass attendance = new AttendanceClass(c.getString(0),c.getString(1), c.getString(2));
                     attendances.add(attendance);
 
                 }while(c.moveToNext());
@@ -431,6 +554,10 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
 
@@ -438,8 +565,9 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
     public void AddAssitanceInSync(String Activity, String Register){
         SQLiteDatabase db= this.getWritableDatabase();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM attendance WHERE activity= ? and register=? ",new String[]{Activity,Register});
+            c=db.rawQuery("SELECT * FROM attendance WHERE activity= ? and register=? ",new String[]{Activity,Register});
             if (c.getCount() == 0){
                 String insertExec= "INSERT INTO attendance(activity,register,server)" +
                         "VALUES(?1,?2,?3)";
@@ -452,16 +580,42 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
         }
         catch (SQLiteException e){
             Log.d("AddAttendance",e.toString());
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
 
 
     }
-
-    public String TakeAssistance(String scanContent,String pkActivity) {
+    public boolean  ExistAttendanceWithOutSync(){
         SQLiteDatabase db= this.getWritableDatabase();
         RegisterResponse register=new RegisterResponse();
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM register WHERE pk=? ",new String[]{pkActivity,scanContent});
+            c=db.rawQuery("SELECT * FROM attendance WHERE server=0 ",null);
+            if (c.getCount() > 0) {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }catch (SQLiteException e){
+            return false;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
+        }
+
+    }
+    public String TakeAssistance(String scanContent,String pkActivity,Boolean server) {
+        SQLiteDatabase db= this.getWritableDatabase();
+        RegisterResponse register=new RegisterResponse();
+        Cursor c=null;
+        try{
+            c=db.rawQuery("SELECT * FROM register WHERE pk=? ",new String[]{scanContent});
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
@@ -479,7 +633,13 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
                     SQLiteStatement stm= db.compileStatement(insertExec);
                     stm.bindString(1,""+pkActivity);
                     stm.bindString(2,""+scanContent);
-                    stm.bindString(3,""+0);
+                    if(server) {
+                        stm.bindString(3,""+1);
+
+                    }else {
+                        stm.bindString(3,""+0);
+
+                    }
                     stm.execute();
                     return register.getFirst_name()+' '+register.getLast_name();
                 }
@@ -488,16 +648,28 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
                 SQLiteStatement stm= db.compileStatement(insertExec);
                 stm.bindString(1,""+pkActivity);
                 stm.bindString(2,""+scanContent);
-                stm.bindString(3,""+0);
+                if(server) {
+                    stm.bindString(3,""+1);
+
+                }else {
+                    stm.bindString(3,""+0);
+
+                }
                 stm.execute();
                 return register.getFirst_name()+' '+register.getLast_name();
 
+            }else {
+                return null;
             }
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
-        return register.getFirst_name()+' '+register.getLast_name();
+
     }
 
 
@@ -506,8 +678,9 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     public User isLoggedUser() {
         SQLiteDatabase db= this.getReadableDatabase();
         User activity;
+        Cursor c=null;
         try{
-            Cursor c=db.rawQuery("SELECT * FROM user",null);
+            c=db.rawQuery("SELECT * FROM user",null);
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
@@ -519,11 +692,31 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
         }catch (SQLiteException e){
             return null;
+        }finally {
+            if(c!=null){
+                c.close();
+            }
         }
         return null;
 
     }
+    public boolean updateAttendance(String attendance){
+        SQLiteDatabase db= this.getWritableDatabase();
+        try{
+            ContentValues valores = new ContentValues();
+            valores.put("server",1);
+            int c=db.update("attendance", valores, "_id="+attendance,null);
 
+            if (c > 0){
+
+                return true;
+            }
+
+        }catch (SQLiteException e){
+            return false;
+        }
+        return false;
+    }
     public boolean synclocalset(String aTrue) {
         SQLiteDatabase db= this.getWritableDatabase();
         try{

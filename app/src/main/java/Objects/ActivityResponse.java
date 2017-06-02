@@ -3,6 +3,7 @@ package Objects;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /**
  * Created by Administrador on 30/07/2016.
@@ -15,6 +16,25 @@ public class ActivityResponse implements Serializable {
     String ends_at;
     String event;
     String info_about ;
+    ArrayList<String> registered;
+
+    public ArrayList<String> getRegistered() {
+        return registered;
+    }
+
+    public void setRegistered(ArrayList<String> registered) {
+        this.registered = registered;
+    }
+
+    public ActivityResponse(String pk, String name, String starts_at, String ends_at, String event, String info_about, ArrayList<String> registered) {
+        this.pk = pk;
+        this.name = name;
+        this.starts_at = starts_at;
+        this.ends_at = ends_at;
+        this.event = event;
+        this.info_about = info_about;
+        this.registered = registered;
+    }
 
     public ActivityResponse(String pk, String name, String starts_at, String ends_at, String event, String info_about) {
         this.pk = pk;

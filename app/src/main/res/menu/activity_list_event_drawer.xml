@@ -12,12 +12,12 @@
         <menu>
             <item
                 android:id="@+id/configurations"
-                android:icon="@mipmap/ic_settings_black_24dp"
-                android:title="Configuración" />
-            <item
+                android:icon="@drawable/ic_autorenew_black_24dp"
+                android:title="Sincronizar" />
+            <!--<item
                 android:id="@+id/help_comments"
                 android:icon="@mipmap/ic_help_black_24dp"
-                android:title="Ayuda y Comentarios" />
+                android:title="Ayuda y Comentarios" />-->
             <item
                 android:id="@+id/close_session"
                 android:icon="@mipmap/ic_exit_to_app_black_24dp"

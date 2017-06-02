@@ -3,6 +3,7 @@ package Objects;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 import app.num.barcodescannerproject.MainActivity;
 
@@ -14,7 +15,7 @@ public class RegisterResponse implements Serializable {
     String pk;
     String first_name;
     String last_name;
-
+    String have_attendance;
     public String getHave_attendance() {
         return have_attendance;
     }
@@ -23,7 +24,7 @@ public class RegisterResponse implements Serializable {
         this.have_attendance = have_attendance;
     }
 
-    String have_attendance;
+
 
     public RegisterResponse(String pk, String first_name, String last_name) {
         this.pk = pk;
@@ -54,7 +55,15 @@ public class RegisterResponse implements Serializable {
         return last_name;
     }
 
+
     public void setLast_name(String last_name) {
         this.last_name = last_name;
+    }
+}
+class NameComparator implements Comparator<RegisterResponse>
+{
+    @Override
+    public int compare(RegisterResponse lhs, RegisterResponse rhs) {
+        return lhs.getFirst_name().compareTo(rhs.getFirst_name());
     }
 }

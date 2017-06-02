@@ -6,9 +6,5 @@
         android:icon="@drawable/ic_flash_on_white_24dp"
         mymenu:showAsAction="always"
         android:title="@string/flash"/>
-    <item
-        android:id="@+id/back"
-        android:icon="@drawable/ic_arrow_back_white_18dp"
-        mymenu:showAsAction="always"
-        android:title="@string/back"/>
+
 </menu>

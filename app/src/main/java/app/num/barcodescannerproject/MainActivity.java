@@ -2,8 +2,11 @@ package app.num.barcodescannerproject;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -49,6 +52,7 @@ import Objects.LogInResponse;
 import Objects.SyncDbObj;
 import Objects.SyncObject;
 import Objects.User;
+import Utils.NetworkStatus;
 import dbapp.SqlliteConsulter;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 import settings.Global_Variables;
@@ -65,10 +69,12 @@ public class MainActivity extends AppCompatActivity{
     private EditText inputPass;
     private ProgressDialog ringProgressDialog;
     private String static_url;
+    private NetworkStatus networkStatus;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d("CREATE Login","Login");
+        networkStatus=new NetworkStatus(MainActivity.this);
         if (Global_Variables.DEV){
             static_url=Global_Variables.DEV_STATIC_URL;
         }
@@ -81,12 +87,23 @@ public class MainActivity extends AppCompatActivity{
         if(user_logged!=null){
             int count=MDB.get_count_sync();
             if (count > 0){
-                new HttpRequestFrequentlySync(user_logged.getToken()).execute();
+                if (networkStatus.isNetworkAvailable()) {
+                    new HttpRequestFrequentlySync(user_logged.getToken()).execute();
+                }
+                else {
+                    Intent intent= new Intent(MainActivity.this,ListEventActivity.class);
+                    intent.putExtra("token",user_logged.getToken());
+                    startActivity(intent);
+                    Toast.makeText(MainActivity.this,"No tiene conexion a internet",Toast.LENGTH_SHORT).show();
+                    MainActivity.this.finish();
+
+                }
 
             }
             else{
                 Intent intent= new Intent(MainActivity.this,SyncActivity.class);
                 intent.putExtra("token",user_logged.getToken());
+                MainActivity.this.finish();
                 startActivity(intent);
             }
 
@@ -101,7 +118,16 @@ public class MainActivity extends AppCompatActivity{
                 inputPass=(EditText)findViewById(R.id.txtPass);
                 String email= inputEmail.getText().toString();
                 String pass= inputPass.getText().toString();
-                new HttpRequestTask(email,pass).execute();
+                if (networkStatus.isNetworkAvailable()) {
+
+                    new HttpRequestTask(email,pass).execute();
+                }
+                else {
+                    Toast.makeText(MainActivity.this,"No tiene conexion a internet",Toast.LENGTH_SHORT).show();
+
+
+                }
+
             }
         });
         if(ringProgressDialog != null) {
@@ -263,11 +289,20 @@ public class MainActivity extends AppCompatActivity{
             if(greeting!=null) {
                 Toast.makeText(MainActivity.this, "Se logeo. . .", Toast.LENGTH_SHORT).show();
                 SqlliteConsulter MDB= new SqlliteConsulter(MainActivity.this.getApplicationContext());
-                MDB.insertUser(new User("",inputEmail,inputPass,"true","false","false",greeting.getToken()));
-                Intent intent = new Intent(MainActivity.this, SyncActivity.class);
-                intent.putExtra("token",greeting.getToken());
-                startActivity(intent);
-                MainActivity.this.finish();
+                User user_logged=new User("",inputEmail,inputPass,"true","false","false",greeting.getToken());
+                MDB.insertUser(user_logged);
+                int count=MDB.get_count_sync();
+                if (count > 0){
+                    new HttpRequestFrequentlySync(user_logged.getToken()).execute();
+
+                }
+                else{
+                    Intent intent= new Intent(MainActivity.this,SyncActivity.class);
+                    intent.putExtra("token",user_logged.getToken());
+                    startActivity(intent);
+                    MainActivity.this.finish();
+                }
+
             }
             else
             {
@@ -279,8 +314,9 @@ public class MainActivity extends AppCompatActivity{
         }
 
     }
-    private class HttpRequestFrequentlySync extends AsyncTask<Void, Void, SyncObject> {
+    public class HttpRequestFrequentlySync extends AsyncTask<Void, Void, SyncObject> {
         private String token;
+        private Boolean syn_obj_null;
         private MainActivity activity;
         private SqlliteConsulter MDB= new SqlliteConsulter(MainActivity.this.getApplicationContext());
         private String ErrorMessage;
@@ -300,48 +336,59 @@ public class MainActivity extends AppCompatActivity{
                         progressBar = ProgressDialog.show(MainActivity.this, "Espere por favor ...", "Sincronizando información...", true);
                         progressBar.setCancelable(false);
                     }});
-                final String url = static_url+"services/data/download/";
+                String url = static_url+"services/data/download/";
                 SyncDbObj syncDbObj=MDB.get_last_sync_success();
-                String startDate="";
-                Date startAt;
-                DateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss 'GMT'Z yyyy", Locale.ENGLISH);
-                try{
-                    Date formattedDate = dateFormat.parse(syncDbObj.getDate().toString());
-                    SimpleDateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    dateFormatGmt.setTimeZone(TimeZone.getTimeZone("UTC"));
-                    startDate=dateFormatGmt.format(formattedDate);
-                }catch(ParseException parseEx){
-                    parseEx.printStackTrace();
-                }
+                syn_obj_null=false;
+                if(syncDbObj == null){
+                    Intent intent =new Intent(MainActivity.this,SyncActivity.class);
+                    intent.putExtra("token",token);
+                    startActivity(intent);
+                    MainActivity.this.finish();
+                    syn_obj_null=true;
+                    return null;
 
-                RestTemplate restTemplate = new RestTemplate();
-                // Add the Jackson and String message converters
-                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
-                //restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
-                restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-                HttpHeaders requestHeaders = new HttpHeaders();
-                //DefaultHttpClient httpClient = new DefaultHttpClient();
-                //HttpPost httpRequest = new HttpPost(url);
+
+                }
+                else {
+                    String startDate = "";
+                    Date startAt;
+                    DateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss 'GMT'Z yyyy", Locale.ENGLISH);
+                    try {
+                        Date formattedDate = dateFormat.parse(syncDbObj.getDate().toString());
+                        SimpleDateFormat dateFormatGmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                        startDate = dateFormatGmt.format(formattedDate);
+                    } catch (ParseException parseEx) {
+                        parseEx.printStackTrace();
+                    }
+
+                    RestTemplate restTemplate = new RestTemplate();
+                    // Add the Jackson and String message converters
+                    restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+                    //restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
+                    restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+                    HttpHeaders requestHeaders = new HttpHeaders();
+                    //DefaultHttpClient httpClient = new DefaultHttpClient();
+                    //HttpPost httpRequest = new HttpPost(url);
                 /*httpRequest.setEntity(new StringEntity("{\"estimate\":false}"));
                 httpRequest.setHeader("content-type", "application/json");
                 httpRequest.setHeader("token",token);*/
-                requestHeaders.setContentType(new MediaType("application","json"));
-                requestHeaders.add("token",token);
-                FrequentlySync frequentlySync =new FrequentlySync();
-                frequentlySync.setEstimate("false");
-                frequentlySync.setLast_sync(startDate);
-                org.springframework.http.HttpEntity requestEntity = new org.springframework.http.HttpEntity(frequentlySync,requestHeaders);
-                ResponseEntity<SyncObject> responseEntity = restTemplate.exchange(url, HttpMethod.POST, requestEntity,SyncObject.class);
-                SyncObject result = responseEntity.getBody();
-                if (result.getEvents().size()>0 && result.getActivities().size() >0 && result.getRegisters().size()>0) {
-                    MDB.AddEvent(result.getEvents());
-                    MDB.AddActivity(result.getActivities());
-                    MDB.AddRegister(result.getRegisters());
-                    MDB.insertActualization(true);
-                }
+                    requestHeaders.setContentType(new MediaType("application", "json"));
+                    requestHeaders.add("token", token);
+                    url+="?estimate=false&last_sync="+startDate;
+                    org.springframework.http.HttpEntity requestEntity = new org.springframework.http.HttpEntity(requestHeaders);
+                    ResponseEntity<SyncObject> responseEntity = restTemplate.exchange(url, HttpMethod.GET, requestEntity, SyncObject.class);
+                    SyncObject result = responseEntity.getBody();
+                    if (result.getEvents().size() > 0 || result.getActivities().size() > 0 || result.getRegisters().size() > 0) {
+                        MDB.AddEvent(result.getEvents());
+                        MDB.AddRegister(result.getRegisters());
+                        MDB.AddActivity(result.getActivities());
+                        MDB.insertActualization(true);
 
-                //HttpResponse result=httpClient.execute(httpRequest);
-                return result;
+                    }
+
+                    //HttpResponse result=httpClient.execute(httpRequest);
+                    return result;
+                }
             } catch (Exception e) {
                 Log.e("MainActivity", e.getMessage(), e);
                 ErrorMessage=e.getMessage();
@@ -361,14 +408,18 @@ public class MainActivity extends AppCompatActivity{
             }
             else
             {
-                MDB.insertActualization(false);
-                Intent intent= new Intent(MainActivity.this,ListEventActivity.class);
-                intent.putExtra("token",token);
-                startActivity(intent);
-                MainActivity.this.finish();
-                Toast.makeText(activity,"Error al descargar información",Toast.LENGTH_SHORT).show();
+                if (!syn_obj_null){
+                    MDB.insertActualization(false);
+                    Intent intent= new Intent(MainActivity.this,ListEventActivity.class);
+                    intent.putExtra("token",token);
+                    startActivity(intent);
+                    MainActivity.this.finish();
+                    Toast.makeText(activity,"Error al descargar información",Toast.LENGTH_SHORT).show();
+                    progressBar.dismiss();
+                }
             }
-            progressBar.dismiss();
+
+
         }
     }
 

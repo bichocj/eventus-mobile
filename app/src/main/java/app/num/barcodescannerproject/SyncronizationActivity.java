@@ -38,6 +38,7 @@ import java.util.List;
 import Objects.ActivityResponse;
 import Objects.AttendanceClass;
 import Objects.EventResponse;
+import Objects.FrequentlySync;
 import Objects.Register;
 import Objects.RegisterResponse;
 import Objects.SyncObject;
@@ -274,10 +275,10 @@ public class SyncronizationActivity extends AppCompatActivity {
                         progressBar = ProgressDialog.show(SyncronizationActivity.this, "Espere por favor ...", "Descargando información...", true);
                         progressBar.setCancelable(false);
                     }});
-                final String url = static_url+"services/data/download/";
+                String url = static_url+"services/data/download/";
 
                 RestTemplate restTemplate = new RestTemplate();
-                // Add the Jackson and String message converters
+                    // Add the Jackson and String message converters
                 restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
                 //restTemplate.getMessageConverters().add(new MappingJacksonHttpMessageConverter());
                 restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
@@ -289,15 +290,15 @@ public class SyncronizationActivity extends AppCompatActivity {
                 httpRequest.setHeader("token",token);*/
                 requestHeaders.setContentType(new MediaType("application","json"));
                 requestHeaders.add("token",token);
-                MultiValueMap<String, String> body = new LinkedMultiValueMap<String, String>();
-                body.add("estimate","false");
-                org.springframework.http.HttpEntity requestEntity = new org.springframework.http.HttpEntity(body,requestHeaders);
-                ResponseEntity<SyncObject> responseEntity = restTemplate.exchange(url, HttpMethod.POST, requestEntity,SyncObject.class);
+                url+="?estimate=false";
+                org.springframework.http.HttpEntity requestEntity = new org.springframework.http.HttpEntity(requestHeaders);
+                ResponseEntity<SyncObject> responseEntity = restTemplate.exchange(url, HttpMethod.GET, requestEntity,SyncObject.class);
                 SyncObject result = responseEntity.getBody();
 
                 MDB.AddEvent(result.getEvents());
-                MDB.AddActivity(result.getActivities());
                 MDB.AddRegister(result.getRegisters());
+                MDB.AddActivity(result.getActivities());
+
                 MDB.insertActualization(true);
 
                 //HttpResponse result=httpClient.execute(httpRequest);

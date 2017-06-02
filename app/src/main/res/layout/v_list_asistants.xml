@@ -5,7 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:id="@+id/Coodinator_Attendance"
     tools:context=".ListAsistansActivity">
+
     <include
         layout="@layout/v_asistan_list"
         android:layout_width="match_parent"

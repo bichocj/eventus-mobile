@@ -15,6 +15,7 @@ import android.widget.Toast;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import Objects.ForgotPassResponse;
+import Utils.NetworkStatus;
 import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.client.methods.HttpPost;
 import cz.msebera.android.httpclient.entity.StringEntity;
@@ -45,10 +46,12 @@ import settings.Global_Variables;
 public class FogotPasswordActivity extends AppCompatActivity {
     private EditText inputEmail;
     private String static_url;
+    private NetworkStatus networkStatus;
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_forgot_password);
+        networkStatus=new NetworkStatus(FogotPasswordActivity.this);
         Button forgot= (Button) findViewById(R.id.btnForgot);
         if (Global_Variables.DEV){
             static_url=Global_Variables.DEV_STATIC_URL;
@@ -67,7 +70,17 @@ public class FogotPasswordActivity extends AppCompatActivity {
                 }*/
                 inputEmail=(EditText)findViewById(R.id.txtEmail);
                 String email= inputEmail.getText().toString();
-                new HttpRequestTask(email).execute();
+                if (networkStatus.isNetworkAvailable()) {
+                    new HttpRequestTask(email).execute();
+                }
+                else {
+                    Intent intent= new Intent(FogotPasswordActivity.this,MainActivity.class);
+                    startActivity(intent);
+                    Toast.makeText(FogotPasswordActivity.this,"No tiene conexion a internet",Toast.LENGTH_SHORT).show();
+                    FogotPasswordActivity.this.finish();
+
+                }
+
 
                 // Intent intent = new Intent (v.getContext(),Main2ActivityCongre.class);
                 //startActivityForResult(intent,0);

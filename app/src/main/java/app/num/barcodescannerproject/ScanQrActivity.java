@@ -33,6 +33,9 @@ public class ScanQrActivity extends AppCompatActivity implements ZXingScannerVie
     private TextView formatTxt, contentTxt;
     private ZXingScannerView mScannerView;
     private String pkActivity;
+    private String pkEvent;
+    private String nameEvent;
+    private String nameActivity;
     private Boolean pklist;
 
     @Override
@@ -42,8 +45,13 @@ public class ScanQrActivity extends AppCompatActivity implements ZXingScannerVie
         if(extras != null){
 
             pkActivity=extras.getString("pkActivity");
+            pkEvent=extras.getString("pkEvent");
+            nameEvent=extras.getString("nameEvent");
+            nameActivity=extras.getString("nameActivity");
             pklist=extras.getBoolean("list");
         }
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         mScannerView = new ZXingScannerView(this);   // Programmatically initialize the scanner view
         setContentView(mScannerView);
         mScannerView.setResultHandler(this); // Register ourselves as a handler for scan results.
@@ -97,13 +105,16 @@ public class ScanQrActivity extends AppCompatActivity implements ZXingScannerVie
         formatTxt.setText("FORMAT: " + scanFormat);
         contentTxt.setText("CONTENT: " + scanContent);
         SqlliteConsulter MDB= new SqlliteConsulter(ScanQrActivity.this.getApplicationContext());
-        String register=MDB.TakeAssistance(scanContent,pkActivity);
+        String register=MDB.TakeAssistance(scanContent,pkActivity,false);
         if(register != null) {
             Toast.makeText(ScanQrActivity.this, register, Toast.LENGTH_LONG).show();
             this.finish();
 
             Intent intent= new Intent(this,ListAsistansActivity.class);
             intent.putExtra("pkActivity",pkActivity);
+            intent.putExtra("pkEvent",pkEvent);
+            intent.putExtra("nameEvent",nameEvent);
+            intent.putExtra("nameActivity",nameActivity);
             startActivity(intent);
 
         }
@@ -113,6 +124,10 @@ public class ScanQrActivity extends AppCompatActivity implements ZXingScannerVie
             this.finish();
             Intent intent= new Intent(this,ScanQrActivity.class);
             intent.putExtra("pkActivity",pkActivity);
+            intent.putExtra("pkEvent",pkEvent);
+            intent.putExtra("nameEvent",nameEvent);
+            intent.putExtra("nameActivity",nameActivity);
+
             startActivity(intent);
         }
 
@@ -162,13 +177,14 @@ public class ScanQrActivity extends AppCompatActivity implements ZXingScannerVie
     @Override
     public boolean  onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.back:
-                this.finish();
-                Intent intent= new Intent(this,ListAsistansActivity.class);
+            case android.R.id.home:
+                ScanQrActivity.this.finish();
+                Intent intent=new Intent(ScanQrActivity.this,ListAsistansActivity.class);
+                intent.putExtra("pkEvent",pkEvent);
                 intent.putExtra("pkActivity",pkActivity);
+                intent.putExtra("nameEvent",nameEvent);
                 startActivity(intent);
                 break;
-
             case R.id.flash:
                 if(mScannerView.getFlash()){
                     item.setIcon(getResources().getDrawable(R.drawable.ic_flash_on_white_24dp));
@@ -182,7 +198,8 @@ public class ScanQrActivity extends AppCompatActivity implements ZXingScannerVie
             default:
                 return super.onOptionsItemSelected(item);
         }
-        return true;
+
+        return super.onOptionsItemSelected(item);
     }
 
 }

@@ -1,29 +1,44 @@
 package Utils;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AbsListView;
 
-/**
- * Created by Administrador on 25/04/2017.
- */
 public class OnSwipeTouchListener implements View.OnTouchListener {
 
     private final GestureDetector gestureDetector;
 
+    public View getV() {
+        return v;
+    }
+
+    public void setV(View v) {
+        this.v = v;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
+    private int position;
+    private View v;
     public OnSwipeTouchListener (Context ctx){
         gestureDetector = new GestureDetector(ctx, new GestureListener());
     }
 
-
-
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        return false;
+        return gestureDetector.onTouchEvent(event);
     }
 
-    private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
+    public final class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
         private static final int SWIPE_THRESHOLD = 100;
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
@@ -50,6 +65,9 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                     }
                 }
                 else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+
+
+
                     if (diffY > 0) {
                         onSwipeBottom();
                     } else {
@@ -65,6 +83,9 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
     }
 
     public void onSwipeRight() {
+        if (v != null){
+            System.out.print("hola");
+        }
     }
 
     public void onSwipeLeft() {
