@@ -37,6 +37,7 @@ test:
     - ./gradlew connectedAndroidTest
     # copy the build outputs to artifacts
     # - mkdir build/outputs
+    - ls
     - cp -r build/outputs $CIRCLE_ARTIFACTS
     # copy the test results to the test results directory.
     # - mkdir build/outputs/androidTest-results
