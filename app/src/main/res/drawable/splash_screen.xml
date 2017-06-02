@@ -6,7 +6,7 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/logoapp_emesh"/>
+            android:src="@mipmap/logo_emesh"/>
     </item>
 
 </layer-list>

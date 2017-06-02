@@ -17,20 +17,16 @@ deployment:
   production: # just a label; label names are completely up to you
     branch: master
     commands:
-      - ls
-      - chmod +x gradlew
       - ./gradlew publishApkRelease
         -Dorg.gradle.project.track=production
   beta:
     branch: develop
     commands:
-      - chmod +x gradlew
       - ./gradlew publishApkRelease
         -Dorg.gradle.project.track=beta
 
 test:
   override:
-    - chmod +x gradlew
     # start the emulator
     - emulator -avd circleci-android24 -no-window:
         background: true
