@@ -1,0 +1,29 @@
+machine:
+  environment:
+    QEMU_AUDIO_DRV: none
+deployment:
+  production: # just a label; label names are completely up to you
+    branch: master
+    commands:
+      - ./gradlew publishApkRelease
+        -Dorg.gradle.project.track=production
+  beta:
+    branch: develop
+    commands:
+      - ./gradlew publishApkRelease
+        -Dorg.gradle.project.track=beta
+
+test:
+  override:
+    # start the emulator
+    - emulator -avd circleci-android24 -no-window:
+        background: true
+        parallel: true
+    # wait for it to have booted
+    - circle-android wait-for-boot
+    # run tests  against the emulator.
+    - ./gradlew connectedAndroidTest
+    # copy the build outputs to artifacts
+    - cp -r eventus-mobile/build/outputs $CIRCLE_ARTIFACTS
+    # copy the test results to the test results directory.
+    - cp -r eventus-mobile/build/outputs/androidTest-results/* $CIRCLE_TEST_REPORTS
