@@ -422,7 +422,7 @@ public class ListAsistansActivity extends AppCompatActivity implements Navigatio
                 if (activityResponses.equals("OK")) {
                     Toast.makeText(ListAsistansActivity.this, "Se enviaron los datos al server correctamente. . .", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(ListAsistansActivity.this, "ERROR: No se enviaron los datos al server correctamente. . .", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ListAsistansActivity.this, "Por favor inténtelo nuevamente ...", Toast.LENGTH_LONG).show();
                     Intent intent=new Intent(ListAsistansActivity.this,ListAsistansActivity.class);
                     intent.putExtra("pkEvent",pkEvent);
                     intent.putExtra("pkActivity",pkActivity);
