@@ -1,12 +1,18 @@
 package Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Created by Administrador on 17/03/2017.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AttendanceClass {
     String pk;
     String activity;
     String register;
+
+    public AttendanceClass() {
+    }
 
     public AttendanceClass(String pk, String activity, String register) {
         this.pk = pk;
