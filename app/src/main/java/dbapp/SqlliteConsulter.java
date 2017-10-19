@@ -8,10 +8,7 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
-import android.widget.Toast;
 
-
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -354,12 +351,12 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
         return null;
     }
 
-    public ArrayList<ActivityResponse> getActivities(String pk) {
+    public ArrayList<ActivityResponse> getActivitiesByEventPk(String eventPk) {
         SQLiteDatabase db= this.getReadableDatabase();
         ArrayList<ActivityResponse> activityResponses= new ArrayList<>();
         Cursor c=null;
         try{
-            c=db.rawQuery("SELECT * FROM activity WHERE event= ? ",new String[]{pk});
+            c=db.rawQuery("SELECT * FROM activity WHERE event= ? ",new String[]{eventPk});
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{

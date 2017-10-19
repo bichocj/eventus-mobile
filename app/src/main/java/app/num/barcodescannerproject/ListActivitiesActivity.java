@@ -5,8 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,24 +14,18 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 
 import Adapters.ActivityAdapter;
-import Adapters.EventAdapter;
 import Objects.ActivityResponse;
-import Objects.EventResponse;
-import Objects.SyncDbObj;
 import dbapp.SqlliteConsulter;
 
 /**
@@ -91,7 +83,7 @@ public class ListActivitiesActivity extends AppCompatActivity {
             }
         };
 
-        activityResponses =MDB.getActivities(pkEvent);
+        activityResponses =MDB.getActivitiesByEventPk(pkEvent);
         ArrayList<Date> dates=new ArrayList<>();
         Boolean flag=true;
         if (activityResponses == null){

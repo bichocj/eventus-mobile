@@ -1,11 +1,8 @@
 package app.num.barcodescannerproject;
 
 import android.app.ProgressDialog;
-import android.app.SearchManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.CursorJoiner;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,24 +11,13 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v4.widget.SearchViewCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutCompat;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -39,7 +25,6 @@ import android.widget.Toast;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.zxing.Result;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -52,31 +37,19 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import Adapters.ActivityAdapter;
 import Adapters.RegisterAdapter;
 import Objects.ActivityResponse;
 import Objects.AttendanceClass;
 import Objects.AttendanceRequest;
 import Objects.EventResponse;
-import Objects.Register;
 import Objects.RegisterResponse;
-import Objects.SyncObject;
 import Objects.User;
 import Utils.NetworkStatus;
-import Utils.OnSwipeTouchListener;
-import cz.msebera.android.httpclient.HttpResponse;
-import cz.msebera.android.httpclient.StatusLine;
-import cz.msebera.android.httpclient.client.HttpClient;
-import cz.msebera.android.httpclient.client.methods.HttpPost;
-import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
 import dbapp.SqlliteConsulter;
-import me.dm7.barcodescanner.zxing.ZXingScannerView;
 import settings.Global_Variables;
 
 /**
@@ -309,7 +282,7 @@ public class ListAsistansActivity extends AppCompatActivity implements Navigatio
                 // Otherwise, set the URL to null.
                 Uri.parse("http://host/path"),
                 // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://app.num.barcodescannerproject/http/host/path")
+                Uri.parse("android-app://app.android.emeshattendace/http/host/path")
         );
         AppIndex.AppIndexApi.start(client, viewAction);
     }
@@ -328,7 +301,7 @@ public class ListAsistansActivity extends AppCompatActivity implements Navigatio
                 // Otherwise, set the URL to null.
                 Uri.parse("http://host/path"),
                 // TODO: Make sure this auto-generated app URL is correct.
-                Uri.parse("android-app://app.num.barcodescannerproject/http/host/path")
+                Uri.parse("android-app://app.android.emeshattendace/http/host/path")
         );
         AppIndex.AppIndexApi.end(client, viewAction);
         client.disconnect();
@@ -360,8 +333,8 @@ public class ListAsistansActivity extends AppCompatActivity implements Navigatio
             });
             String state = "";
             SqlliteConsulter MDB = new SqlliteConsulter(ListAsistansActivity.this.getApplicationContext());
-            attendances = MDB.getAttendance();
             eventResponses = MDB.showEvent();
+            attendances = MDB.getAttendance();
             if (attendances != null) {
                 if (attendances.size() == 0) {
                     return state = "None";
@@ -415,11 +388,11 @@ public class ListAsistansActivity extends AppCompatActivity implements Navigatio
         }
 
         @Override
-        protected void onPostExecute(String activityResponses) {
-            if (activityResponses.equals("None")) {
+        protected void onPostExecute(String serverResponse) {
+            if (serverResponse.equals("None")) {
                 Toast.makeText(ListAsistansActivity.this, "No tomo asistencias en su movil. . .", Toast.LENGTH_LONG).show();
             } else {
-                if (activityResponses.equals("OK")) {
+                if (serverResponse.equals("OK")) {
                     Toast.makeText(ListAsistansActivity.this, "Se enviaron los datos al server correctamente. . .", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(ListAsistansActivity.this, "Por favor inténtelo nuevamente ...", Toast.LENGTH_LONG).show();
