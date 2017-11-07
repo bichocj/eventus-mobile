@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import app.num.barcodescannerproject.MainActivity;
-
 /**
  * Created by Administrador on 31/07/2016.
  */
@@ -16,6 +14,7 @@ public class RegisterResponse implements Serializable {
     String first_name;
     String last_name;
     String have_attendance;
+    String ticket_name;
     public String getHave_attendance() {
         return have_attendance;
     }
@@ -32,7 +31,22 @@ public class RegisterResponse implements Serializable {
         this.last_name = last_name;
     }
 
+    public RegisterResponse(String pk, String first_name, String last_name, String ticket_name) {
+        this.pk = pk;
+        this.first_name = first_name;
+        this.last_name = last_name;
+        this.ticket_name = ticket_name;
+    }
+
     public RegisterResponse() {
+    }
+
+    public String getTicket_name() {
+        return ticket_name;
+    }
+
+    public void setTicket_name(String ticket_name) {
+        this.ticket_name = ticket_name;
     }
 
     public String getPk() {

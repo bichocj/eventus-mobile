@@ -39,7 +39,7 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
     private static final String TABLA_ATTENDANCE="CREATE TABLE attendance" +
             "(_id INTEGER PRIMARY KEY AUTOINCREMENT,activity TEXT,register TEXT, server INTEGER DEFAULT 0)";
     private static final String TABLA_REGISTERS="CREATE TABLE register" +
-            "(pk TEXT PRIMARY KEY,first_name TEXT, last_name TEXT)";
+            "(pk TEXT PRIMARY KEY,first_name TEXT, last_name TEXT, ticket_name TEXT)";
     public SqlliteConsulter(Context context) {
         super(context, NOMBRE_BD, null, VERSION_BASEDATOS);
         this.context=context;
@@ -192,12 +192,13 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
         SQLiteDatabase db= getWritableDatabase();
         for (RegisterResponse registerResponse:registerResponses) {
             try {
-                String insertExec = "INSERT INTO register(pk,first_name , last_name)" +
-                        "VALUES(?1,?2,?3)";
+                String insertExec = "INSERT INTO register(pk,first_name , last_name, ticket_name)" +
+                        "VALUES(?1,?2,?3,?4)";
                 SQLiteStatement stm = db.compileStatement(insertExec);
                 stm.bindString(1, "" + registerResponse.getPk());
                 stm.bindString(2, "" + registerResponse.getFirst_name());
                 stm.bindString(3, "" + registerResponse.getLast_name());
+                stm.bindString(4, "" + registerResponse.getTicket_name());
                 stm.execute();
             }catch (Exception e){
                 try{
@@ -450,7 +451,7 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
                 c.close();
             }
         }
-        return null;
+        return activityResponses;
     }
 
     public int getRegisterQuantity(String pkActivity){
@@ -616,7 +617,8 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{
-                    register = new RegisterResponse(c.getString(0), c.getString(1), c.getString(2));
+//                    register = new RegisterResponse(c.getString(0), c.getString(1), c.getString(2));
+                    register = new RegisterResponse(c.getString(0), c.getString(1), c.getString(2), c.getString(3));
                 }while(c.moveToNext());
                 try{
                     c=db.rawQuery("SELECT * FROM attendance WHERE activity= ? and register=? ",new String[]{pkActivity,scanContent});
@@ -653,7 +655,7 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
 
                 }
                 stm.execute();
-                return register.getFirst_name()+' '+register.getLast_name();
+                return register.getFirst_name()+' '+register.getLast_name() + " - " + register.getTicket_name();
 
             }else {
                 return null;
