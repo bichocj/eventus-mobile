@@ -433,7 +433,7 @@ public class SqlliteConsulter extends SQLiteOpenHelper {
         ArrayList<RegisterResponse> activityResponses= new ArrayList<>();
         Cursor c=null;
         try{
-            c=db.rawQuery("SELECT * FROM register ORDER BY first_name ASC",null);
+            c=db.rawQuery("SELECT * FROM register ORDER BY last_name ASC",null);
             if (c.getCount() > 0){
                 c.moveToFirst();
                 do{

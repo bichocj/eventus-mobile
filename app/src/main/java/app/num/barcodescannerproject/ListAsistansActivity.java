@@ -155,13 +155,13 @@ public class ListAsistansActivity extends AppCompatActivity implements Navigatio
         }
         final ListView lv = (ListView) findViewById(R.id.Asistants_lv);
         List<RegisterResponse> registerResponses = registerResponses1;
-        for(RegisterResponse registerResponse : registerResponses){
-            registerResponse.setFirst_name(registerResponse.getFirst_name().substring(0,1).toUpperCase()+registerResponse.getFirst_name().substring(1));
-        }
+//        for(RegisterResponse registerResponse : registerResponses){
+//            registerResponse.setFirst_name(registerResponse.getFirst_name().substring(0,1).toUpperCase()+registerResponse.getFirst_name().substring(1));
+//        }
         Collections.sort(registerResponses, new Comparator<RegisterResponse>() {
             @Override
             public int compare(RegisterResponse lhs, RegisterResponse rhs) {
-                return lhs.getFirst_name().compareTo(rhs.getFirst_name());
+                return lhs.getLast_name().compareTo(rhs.getLast_name());
             }
         });
         lv.setFastScrollEnabled(true);

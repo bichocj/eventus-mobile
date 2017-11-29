@@ -49,7 +49,7 @@ public class RegisterAdapter extends ArrayAdapter<RegisterResponse> implements S
 
             for (int x = lActivities.size()-1; x >= 0; x--) {
                 RegisterResponse fruit = lActivities.get(x);
-                String ch = fruit.getFirst_name().substring(0, 1);
+                String ch = fruit.getLast_name().substring(0, 1);
                 ch = ch.toUpperCase(Locale.US);
 
                 // HashMap will prevent duplicates
@@ -124,7 +124,7 @@ public class RegisterAdapter extends ArrayAdapter<RegisterResponse> implements S
                     holder.display_img.setImageResource(R.drawable.ic_cruz_black);
                 }
 
-                holder.display_name.setText(lActivities.get(position).getFirst_name()+' '+lActivities.get(position).getLast_name());
+                holder.display_name.setText(lActivities.get(position).getLast_name()+' '+lActivities.get(position).getFirst_name());
 
 
             } catch (Exception e) {
