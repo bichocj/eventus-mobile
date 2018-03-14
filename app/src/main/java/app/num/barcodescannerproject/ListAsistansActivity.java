@@ -161,7 +161,7 @@ public class ListAsistansActivity extends AppCompatActivity implements Navigatio
         Collections.sort(registerResponses, new Comparator<RegisterResponse>() {
             @Override
             public int compare(RegisterResponse lhs, RegisterResponse rhs) {
-                return lhs.getLast_name().compareTo(rhs.getLast_name());
+                return lhs.getLast_name().toUpperCase().compareTo(rhs.getLast_name().toUpperCase());
             }
         });
         lv.setFastScrollEnabled(true);
