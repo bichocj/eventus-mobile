@@ -189,6 +189,7 @@ public class SyncronizationActivity extends AppCompatActivity {
             progressBar = new ProgressDialog(SyncronizationActivity.this);
         }
 
+
         @Override
         protected String  doInBackground(Void... params) {
             activity=SyncronizationActivity.this;
